@@ -60,6 +60,7 @@ venues_df['lon'] = venues_df['venue'].map(lambda x: venues_coords.get(x)[1] if v
 app = dash.Dash(__name__, suppress_callback_exceptions=True)
 
 # Navigation bar
+
 navbar = html.Div([
     dcc.Link('Home', href='/', style={'margin': '10px'}),
     dcc.Link('Sports Insights', href='/sports-insights', style={'margin': '10px'}),
@@ -67,56 +68,101 @@ navbar = html.Div([
 ], style={'textAlign': 'center', 'fontSize': '20px', 'backgroundColor': '#9370DB', 'color': 'white', 'padding': '10px'})
 
 # Home layout
+
 total_countries = medals_total_df['country'].nunique()
 total_athletes = athletes_df[athletes_df['current'] == True].shape[0]
 total_medals = medals_total_df['Total'].sum()
 
 home_layout = html.Div([
-   # html.Div('"Home | Sports Insights | About"', style={'textAlign': 'center', 'backgroundColor': '#9370DB', 'color': 'white', 'padding': '10px'}),
+   
     html.Div([
         html.Div(f'Total Countries: {total_countries}', style={'backgroundColor': '#FFA07A', 'padding': '10px', 'margin': '10px', 'textAlign': 'center'}),
         html.Div(f'Total Athletes: {total_athletes}', style={'backgroundColor': '#FFA07A', 'padding': '10px', 'margin': '10px', 'textAlign': 'center'}),
         html.Div(f'Total Medals: {total_medals}', style={'backgroundColor': '#FFA07A', 'padding': '10px', 'margin': '10px', 'textAlign': 'center'}),
     ], style={'display': 'flex', 'justifyContent': 'space-around'}),
     html.Div([
-        dcc.Graph(figure=px.bar(medals_total_df.sort_values('Total', ascending=False).head(5), x='country', y='Total', title='Bar Chart: Medals by Country', color='Total', color_continuous_scale='Viridis')),
-        dcc.Graph(figure=px.pie(medals_total_df, names='country', values='Total', title='Pie Chart: Overall Medal Distribution'))
+        dcc.Graph(figure=px.bar(medals_total_df.sort_values('Total', ascending=False).head(5), x='country', y='Total', title='<b>Medals Won by Top 5 Countries<b>', color='Total', color_continuous_scale='Viridis')),
+        dcc.Graph(
+    figure=px.choropleth(
+        medals_total_df,
+        locations='country',
+        locationmode='country names',
+        color='Total',
+        color_continuous_scale='Plasma',
+        title='<b>Total Medals Won By Countries (Hover Over The Map For Details)<b>'
+    )
+)
     ], style={'display': 'flex', 'justifyContent': 'space-around'}),
     html.P('Data Source: Paris Olympics 2024 | Version 1.0 | Data4All PLC', style={'textAlign': 'center', 'fontStyle': 'italic'})
 ], style={'backgroundColor': '#ADD8E6', 'padding': '20px'})
 
 # Sports Insights layout
+
 sports_options = [{'label': sport, 'value': sport} for sport in sorted(set(venue for sublist in venues_df['sports'] for venue in sublist))]
 country_options = [{'label': country, 'value': country} for country in sorted(medals_total_df['country'].unique())]
 
 sports_insights_layout = html.Div([
-    #html.Div('"Home | Sports Insights | About"', style={'textAlign': 'center', 'backgroundColor': '#9370DB', 'color': 'white', 'padding': '10px'}),
     html.Div([
-        dcc.Dropdown(id='sport-dropdown', options=sports_options, placeholder='Select Sports', style={'margin': '38px'}),
-        dcc.Dropdown(id='country-dropdown', options=country_options, placeholder='Select Country', style={'margin': '38px'}),
-    ], style={'display': 'flex', 'justifyContent': 'space-between'}),
+    html.Label('Sport:', style={
+        'marginRight': '8px',
+        'fontWeight': 'bold',
+        'color': 'green',
+        'fontSize': '20px'
+    }),
+    dcc.Dropdown(
+        id='sport-dropdown',
+        options=sports_options,
+        placeholder='Select Sport',
+        style={
+            'width': '40%',
+            'marginRight': '20px',
+            'fontSize': '16px'
+        }
+    ),
+
+    html.Label('Country:', style={
+        'marginRight': '8px',
+        'fontWeight': 'bold',
+        'color': 'green',
+        'fontSize': '20px'
+    }),
+    dcc.Dropdown(
+        id='country-dropdown',
+        options=country_options,
+        placeholder='Select Country',
+        style={
+            'width': '40%',
+            'fontSize': '16px'
+        }
+    )
+], style={
+    'display': 'flex',
+    'justifyContent': 'center',
+    'alignItems': 'center',
+    'gap': '10px',
+    'marginBottom': '20px'
+})
+,
     html.Div([
         dcc.Graph(id='medal-trends-chart', figure=px.bar(title='Bar Chart - Medal Trends')),
         html.Div([
-            dcc.Graph(id='venues-map', figure=px.scatter_mapbox(venues_df, lat='lat', lon='lon', hover_name='venue', hover_data=['sports'], mapbox_style='open-street-map', title='Map of Paris Olympic Venues', zoom=3))
+            dcc.Graph(id='venues-map', figure=px.scatter_mapbox(venues_df, lat='lat', lon='lon', hover_name='venue', hover_data=['sports'], mapbox_style='open-street-map', title='<b>Map of Paris Olympic Venues<b>', zoom=3))
         ], style={'margin-left': '-100px'})  # Shift map to the left
     ], style={'display': 'flex', 'justifyContent': 'space-around'}),
     html.P('Data Source: Paris Olympics 2024 | Version 1.0 | Data4All PLC', style={'textAlign': 'center', 'fontStyle': 'italic'})
 ], style={'backgroundColor': '#ADD8E6', 'padding': '20px'})
 
 # About layout
+
 about_layout = html.Div([
-    #html.Div('"Home | Sports Insights | About"', style={'textAlign': 'center', 'backgroundColor': '#9370DB', 'color': 'white', 'padding': '10px'}),
     html.H1('About', style={'textAlign': 'center'}),
-    html.P('This dashboard provides insights into the Paris Olympics 2024 data for sports journalists, analysts, and fans.'),
+    html.P('This Dashboard Provides Insights Into The Paris Olympics 2024 Data For Sports Journalists, Analysts, And Fans.', style={'textAlign': 'center', 'fontStyle': 'italic'}),
     html.P('Data Source: Paris Olympics 2024 | Version 1.0 | Data4All PLC', style={'textAlign': 'center', 'fontStyle': 'italic'})
 ], style={'backgroundColor': '#ADD8E6', 'padding': '20px'})
-
-
-
 print("Unique countries:", medallists_df['country'].dropna().unique()[:20])
 print("Unique disciplines:", medallists_df['discipline'].dropna().unique()[:20])
 print("Unique medal types:", medallists_df['medal_type'].dropna().unique())
+
 # Callback for Sports Insights page
 @app.callback(
     Output('medal-trends-chart', 'figure'),
@@ -163,10 +209,7 @@ def update_medal_trends(selected_sport, selected_country):
         )
         return fig
 
-    return px.bar(title='Select a sport or country to view medal trends')
-
-
-
+    return px.bar(title='<b>Select a Sport or Country From The Dropdown Menu</b>')
 
     
 app.layout = html.Div([
